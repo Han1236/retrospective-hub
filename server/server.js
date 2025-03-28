@@ -1,13 +1,26 @@
 // server/server.js
+require('dotenv').config(); // .env 파일 로드 (코드 맨 위)
 const express = require('express');
 const cors = require('cors');
-const { v4: uuidv4 } = require('uuid'); // uuid 라이브러리 임포트
+const { v4: uuidv4 } = require('uuid');
+const { GoogleGenerativeAI } = require("@google/generative-ai"); // Google AI SDK 임포트
+
+// --- Google AI 클라이언트 설정 ---
+if (!process.env.GEMINI_API_KEY) {
+  console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+  console.error('Google Gemini API Key not found in .env file');
+  console.error('Please create a server/.env file and add GEMINI_API_KEY');
+  console.error('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+  // process.exit(1); // 실제 서비스에서는 종료 권장
+}
+// API 키를 사용하여 Generative AI 클라이언트 초기화
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 const app = express();
 const port = process.env.PORT || 3001;
 
 app.use(cors());
-app.use(express.json()); // JSON 요청 본문 파싱
+app.use(express.json());
 
 // --- 데이터 저장을 위한 임시 메모리 DB ---
 let dataStore = []; // 데이터를 저장할 배열
@@ -123,6 +136,58 @@ app.get('/api/emotions', (req, res) => {
     } catch (error) {
       console.error('Error fetching emotions:', error);
       res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+// --- AI 요약 API 엔드포인트 (Gemini 사용) ---
+app.post('/api/summarize', async (req, res) => {
+    try {
+      const { textToSummarize } = req.body;
+  
+      if (!textToSummarize || typeof textToSummarize !== 'string' || textToSummarize.trim().length === 0) {
+        return res.status(400).json({ message: '텍스트를 입력해주세요.' });
+      }
+  
+      // 길이 제한 (Gemini 모델의 입력 제한 및 비용 고려)
+      if (textToSummarize.length > 1500) { // 예: 1500자 (모델별 제한 확인 필요)
+          return res.status(400).json({ message: '요약할 텍스트가 너무 깁니다. (1500자 이하)' });
+      }
+  
+      console.log('요청 받은 텍스트:', textToSummarize);
+  
+      // --- Google Gemini API 호출 ---
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+  
+      // 프롬프트 구성 (Gemini는 보통 직접적인 지시문을 선호)
+      const prompt = `다음 회고 내용을 한국어로 간결하게 요약해줘:\n\n"${textToSummarize}"\n\n핵심 내용과 감정 위주로 1~2문장으로 요약해줘.`;
+  
+      // 생성 설정 (선택 사항)
+      const generationConfig = {
+        temperature: 0.5, // 창의성 조절 (0 ~ 1)
+        maxOutputTokens: 150, // 최대 출력 토큰 수
+      };
+  
+      // 텍스트 생성 요청
+      const result = await model.generateContent(prompt, generationConfig);
+      const response = await result.response;
+      const summary = await response.text(); // 요약 결과 텍스트 추출
+  
+      // console.log('Gemini 응답 전문:', response); // 전체 응답 구조 확인용
+  
+      if (!summary) {
+        throw new Error('Gemini API로부터 유효한 요약 결과를 받지 못했습니다.');
+      }
+  
+      console.log('생성된 요약 (Gemini):', summary);
+  
+      res.status(200).json({ summary });
+  
+    } catch (error) {
+      console.error('AI 요약 API 오류 (Gemini):', error);
+      // Gemini 관련 오류 처리 (더 구체적인 오류 처리는 SDK 문서 참고)
+      // 예: API 키 오류, 할당량 초과 등
+      // Gemini API 오류는 종종 error.message나 error.details 등에 정보가 포함될 수 있음
+      res.status(500).json({ message: error.message || 'AI 요약 처리 중 서버 내부 오류 발생' });
     }
   });
 

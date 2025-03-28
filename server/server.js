@@ -56,6 +56,22 @@ app.post('/api/data', (req, res) => {
   }
 });
 
+// --- 데이터 조회 API 엔드포인트 ---
+app.get('/api/data', (req, res) => {
+    try {
+      // 현재 dataStore에 있는 모든 데이터를 반환
+      // 나중에는 여기서 날짜별 정렬 등을 추가할 수 있습니다.
+      // 최신 데이터가 위로 오도록 정렬 (선택 사항)
+      const sortedData = [...dataStore].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  
+      res.status(200).json(sortedData); // 또는 정렬하지 않으려면 res.status(200).json(dataStore);
+  
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
 // 서버 시작
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);

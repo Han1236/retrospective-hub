@@ -1,0 +1,28 @@
+/* EmotionList.css */
+.emotion-list {
+    margin-top: 30px;
+  }
+  
+  .emotion-list table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+  }
+  
+  .emotion-list th,
+  .emotion-list td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+    vertical-align: top; /* 메모가 길어질 경우 위쪽 정렬 */
+  }
+  
+  .emotion-list th {
+    background-color: #f2f2f2;
+  }
+  
+  /* 메모 칸 너비 조정 등 필요시 추가 */
+  .emotion-list td:nth-child(3) { /* 메모 열 */
+      min-width: 200px;
+      white-space: pre-wrap; /* 줄바꿈 표시 */
+  }

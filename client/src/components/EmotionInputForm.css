@@ -1,0 +1,23 @@
+/* EmotionInputForm.css */
+.emotion-input-form {
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  
+  /* ... (DataInputForm.css와 유사한 스타일 추가) ... */
+  
+  .emotion-input-form textarea {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: calc(100% - 100px); /* 레이블 너비 고려 */
+    resize: vertical; /* 세로 크기 조절만 허용 */
+  }
+  
+  .emotion-input-form input[type="range"] {
+    vertical-align: middle;
+    width: calc(100% - 140px); /* 레이블과 점수 표시 공간 제외 */
+    margin-right: 10px;
+  }

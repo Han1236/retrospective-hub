@@ -112,6 +112,20 @@ app.post('/api/emotions', (req, res) => {
     }
   });
 
+// --- 감정 데이터 조회 API 엔드포인트 (새로 추가) ---
+app.get('/api/emotions', (req, res) => {
+    try {
+      // 최신 데이터가 위로 오도록 정렬
+      const sortedEmotions = [...emotionStore].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  
+      res.status(200).json(sortedEmotions);
+  
+    } catch (error) {
+      console.error('Error fetching emotions:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
 // 서버 시작
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);

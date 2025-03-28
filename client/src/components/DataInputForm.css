@@ -1,0 +1,44 @@
+.data-input-form {
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  
+  .data-input-form h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+  
+  .data-input-form div {
+    margin-bottom: 10px;
+  }
+  
+  .data-input-form label {
+    display: inline-block;
+    width: 80px;
+    margin-right: 10px;
+  }
+  
+  .data-input-form input[type="date"],
+  .data-input-form input[type="text"],
+  .data-input-form input[type="number"] {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: calc(100% - 100px); /* 레이블 너비만큼 제외 */
+  }
+  
+  .data-input-form button {
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  
+  .data-input-form button:hover {
+    background-color: #0056b3;
+  }

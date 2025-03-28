@@ -11,6 +11,7 @@ app.use(express.json()); // JSON 요청 본문 파싱
 
 // --- 데이터 저장을 위한 임시 메모리 DB ---
 let dataStore = []; // 데이터를 저장할 배열
+let emotionStore = []; // 감정 데이터를 저장할 배열 추가
 
 // 기본 라우트 (테스트용)
 app.get('/api', (req, res) => {
@@ -68,6 +69,45 @@ app.get('/api/data', (req, res) => {
   
     } catch (error) {
       console.error('Error fetching data:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+// --- 감정 데이터 저장 API 엔드포인트 (새로 추가) ---
+app.post('/api/emotions', (req, res) => {
+    try {
+      const { date, score, memo } = req.body;
+  
+      // 유효성 검사
+      if (!date || score === undefined || score === null) {
+        return res.status(400).json({ message: 'Missing required fields (date, score)' });
+      }
+      const scoreNum = parseInt(score, 10);
+      if (isNaN(scoreNum) || scoreNum < 1 || scoreNum > 10) {
+        return res.status(400).json({ message: 'Score must be a number between 1 and 10' });
+      }
+      // 메모는 선택 사항이므로 필수는 아님 (길이 제한 등은 필요시 추가)
+  
+      // 새 감정 데이터 객체 생성
+      const newEmotion = {
+        id: uuidv4(), // 고유 ID
+        date,
+        score: scoreNum,
+        memo: memo || '', // 메모가 없으면 빈 문자열로 저장
+        createdAt: new Date().toISOString(),
+      };
+  
+      // 데이터 저장 (배열에 추가)
+      emotionStore.push(newEmotion);
+  
+      console.log('Emotion saved:', newEmotion);
+      console.log('Current emotionStore:', emotionStore); // 저장 상태 확인용 로그
+  
+      // 클라이언트에 성공 응답 전송
+      res.status(201).json({ message: 'Emotion saved successfully', data: newEmotion });
+  
+    } catch (error) {
+      console.error('Error saving emotion:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });

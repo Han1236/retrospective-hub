@@ -1,0 +1,20 @@
+.data-list {
+    margin-top: 30px;
+  }
+  
+  .data-list table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+  }
+  
+  .data-list th,
+  .data-list td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  
+  .data-list th {
+    background-color: #f2f2f2;
+  }

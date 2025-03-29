@@ -25,6 +25,7 @@ app.use(express.json());
 // --- 데이터 저장을 위한 임시 메모리 DB ---
 let dataStore = []; // 데이터를 저장할 배열
 let emotionStore = []; // 감정 데이터를 저장할 배열 추가
+let feedbackStore = []; // 피드백 데이터를 저장할 배열 추가
 
 // 기본 라우트 (테스트용)
 app.get('/api', (req, res) => {
@@ -188,6 +189,55 @@ app.post('/api/summarize', async (req, res) => {
       // 예: API 키 오류, 할당량 초과 등
       // Gemini API 오류는 종종 error.message나 error.details 등에 정보가 포함될 수 있음
       res.status(500).json({ message: error.message || 'AI 요약 처리 중 서버 내부 오류 발생' });
+    }
+  });
+
+// --- 피드백 저장 API 엔드포인트 ---
+app.post('/api/feedback', (req, res) => {
+    try {
+      const { date, goodPoints, badPoints } = req.body;
+  
+      // 유효성 검사 (날짜는 필수, 내용은 최소 하나는 있어야 의미있음)
+      if (!date) {
+        return res.status(400).json({ message: 'Missing required field: date' });
+      }
+      if ((!goodPoints || goodPoints.trim().length === 0) && (!badPoints || badPoints.trim().length === 0)) {
+        return res.status(400).json({ message: '잘한 점 또는 아쉬운 점 중 하나는 입력해주세요.' });
+      }
+  
+      // 새 피드백 데이터 객체 생성
+      const newFeedback = {
+        id: uuidv4(), // 고유 ID
+        date,
+        goodPoints: goodPoints || '', // 없으면 빈 문자열
+        badPoints: badPoints || '',   // 없으면 빈 문자열
+        createdAt: new Date().toISOString(),
+      };
+  
+      // 데이터 저장
+      feedbackStore.push(newFeedback);
+  
+      console.log('Feedback saved:', newFeedback);
+      console.log('Current feedbackStore:', feedbackStore); // 저장 상태 확인
+  
+      // 성공 응답 전송
+      res.status(201).json({ message: 'Feedback saved successfully', data: newFeedback });
+  
+    } catch (error) {
+      console.error('Error saving feedback:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+  
+  // --- 피드백 조회 API 엔드포인트 ---
+  app.get('/api/feedback', (req, res) => {
+    try {
+      // 최신 데이터가 위로 오도록 정렬
+      const sortedFeedback = [...feedbackStore].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      res.status(200).json(sortedFeedback);
+    } catch (error) {
+      console.error('Error fetching feedback:', error);
+      res.status(500).json({ message: 'Internal server error' });
     }
   });
 

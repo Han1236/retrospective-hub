@@ -1,0 +1,64 @@
+/* client/src/components/FeedbackList.css */
+.feedback-list {
+    margin-top: 30px;
+    margin-bottom: 30px; /* 아래쪽 여백 추가 */
+  }
+  
+  .feedback-list h2 {
+    margin-bottom: 15px;
+    font-size: 1.2em;
+  }
+  
+  .feedback-list table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    table-layout: fixed; /* 테이블 레이아웃 고정 (선택 사항, 내용 길 때 유용) */
+  }
+  
+  .feedback-list th,
+  .feedback-list td {
+    border: 1px solid #ddd;
+    padding: 10px 12px; /* 패딩 조정 */
+    text-align: left;
+    vertical-align: top; /* 내용이 길어질 수 있으므로 위쪽 정렬 */
+    word-wrap: break-word; /* 긴 단어 줄바꿈 */
+  }
+  
+  .feedback-list th {
+    background-color: #e9ecef; /* 헤더 배경색 변경 (선택 사항) */
+    font-weight: bold;
+  }
+  
+  /* 각 열 너비 조정 (선택 사항) */
+  .feedback-list th:nth-child(1),
+  .feedback-list td:nth-child(1) { /* 날짜 열 */
+    width: 15%;
+  }
+  
+  .feedback-list th:nth-child(2),
+  .feedback-list td:nth-child(2) { /* 잘한 점 열 */
+    width: 42.5%;
+  }
+  
+  .feedback-list th:nth-child(3),
+  .feedback-list td:nth-child(3) { /* 아쉬운 점 열 */
+    width: 42.5%;
+  }
+  
+  /* 빈 내용 표시 '-' 스타일 (선택 사항) */
+  .feedback-list td:empty::after {
+      content: '-';
+      color: #999;
+  }
+  
+  /* FeedbackList.jsx에서 <br> 태그 대신 CSS로 줄바꿈 처리 원할 경우 (React.Fragment 사용하지 않을 때) */
+  /*
+  .feedback-list td pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      margin: 0;
+      font-family: inherit;
+      font-size: inherit;
+  }
+  */

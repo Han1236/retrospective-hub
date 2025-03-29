@@ -77,7 +77,7 @@ app.get('/api/data', (req, res) => {
       // 현재 dataStore에 있는 모든 데이터를 반환
       // 나중에는 여기서 날짜별 정렬 등을 추가할 수 있습니다.
       // 최신 데이터가 위로 오도록 정렬 (선택 사항)
-      const sortedData = [...dataStore].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      const sortedData = [...dataStore].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
   
       res.status(200).json(sortedData); // 또는 정렬하지 않으려면 res.status(200).json(dataStore);
   
@@ -130,7 +130,7 @@ app.post('/api/emotions', (req, res) => {
 app.get('/api/emotions', (req, res) => {
     try {
       // 최신 데이터가 위로 오도록 정렬
-      const sortedEmotions = [...emotionStore].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      const sortedEmotions = [...emotionStore].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
   
       res.status(200).json(sortedEmotions);
   
@@ -165,7 +165,7 @@ app.post('/api/summarize', async (req, res) => {
       // 생성 설정 (선택 사항)
       const generationConfig = {
         temperature: 0.5, // 창의성 조절 (0 ~ 1)
-        maxOutputTokens: 150, // 최대 출력 토큰 수
+        maxOutputTokens: 500, // 최대 출력 토큰 수
       };
   
       // 텍스트 생성 요청
@@ -233,11 +233,109 @@ app.post('/api/feedback', (req, res) => {
   app.get('/api/feedback', (req, res) => {
     try {
       // 최신 데이터가 위로 오도록 정렬
-      const sortedFeedback = [...feedbackStore].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      const sortedFeedback = [...feedbackStore].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
       res.status(200).json(sortedFeedback);
     } catch (error) {
       console.error('Error fetching feedback:', error);
       res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+// --- 다음 주 계획 추천 API 엔드포인트 (새로 추가) ---
+app.post('/api/recommend-plan', async (req, res) => {
+    try {
+      // 클라이언트로부터 분석할 데이터를 받음 (예: 최근 피드백, 감정 메모)
+      // MVP에서는 단순하게 가장 최근 데이터 텍스트를 받는다고 가정
+      const { recentBadPoints, recentEmotionMemo } = req.body;
+  
+      // 최소한의 데이터는 있어야 추천 가능
+      if (!recentBadPoints && !recentEmotionMemo) {
+        return res.status(400).json({ message: '분석할 회고 내용(아쉬운 점 또는 감정 메모)이 필요합니다.' });
+      }
+  
+      // 프롬프트 구성 (AI에게 역할과 목표 명확히 제시)
+      let promptContent = "당신은 사용자의 회고를 바탕으로 성장을 돕는 조언가입니다.\n";
+      promptContent += "다음은 사용자의 최근 회고 내용입니다:\n";
+      if (recentBadPoints) {
+        promptContent += `- 아쉬웠던 점/교훈: ${recentBadPoints}\n`;
+      }
+      if (recentEmotionMemo) {
+        promptContent += `- 느낀 감정/생각: ${recentEmotionMemo}\n`;
+      }
+      promptContent += "\n이 내용을 바탕으로, 사용자가 다음 주에 실천해볼 수 있는 구체적인 행동 계획이나 개선 아이디어를 2가지 제안해주세요.";
+      promptContent += " 각 제안은 실현 가능하고 긍정적인 방향으로 작성해주세요. 번호 목록 형식으로 답변해주세요.";
+  
+      console.log('계획 추천 요청 프롬프트:', promptContent);
+  
+      // --- Google Gemini API 호출 ---
+      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+      const generationConfig = {
+        temperature: 0.7, // 약간 더 창의적인 제안을 위해 온도 조절 가능
+        maxOutputTokens: 500, // 충분한 답변 길이 확보
+      };
+  
+      const result = await model.generateContent(promptContent, generationConfig);
+      const response = await result.response;
+      const recommendationsText = await response.text();
+  
+      if (!recommendationsText) {
+        throw new Error('Gemini API로부터 유효한 추천 결과를 받지 못했습니다.');
+      }
+  
+      console.log('생성된 계획 추천 (원본):', recommendationsText);
+
+      // --- 개선된 응답 파싱 로직 ---
+      const recommendations = [];
+      const lines = recommendationsText.split('\n');
+      let currentRecommendation = null;
+
+      for (const line of lines) {
+        const trimmedLine = line.trim();
+        const match = trimmedLine.match(/^(\d+)\.\s*(.*)/); // 숫자로 시작하는지 확인
+
+        if (match) {
+          // 새로운 번호 목록 시작
+          const title = match[2]; // 숫자와 점 뒤의 내용 (제목)
+          if (currentRecommendation) {
+            // 이전 추천 항목을 배열에 추가 (내용 정리 후)
+            currentRecommendation.description = currentRecommendation.description.trim();
+            recommendations.push(currentRecommendation);
+          }
+          // 새 추천 항목 객체 시작
+          currentRecommendation = {
+            // title: title, // 제목만 따로 저장하거나
+            description: title + '\n' // 제목 포함해서 상세 설명 시작
+          };
+        } else if (currentRecommendation && trimmedLine.length > 0) {
+          // 현재 추천 항목에 속하는 내용 추가 (빈 줄 제외)
+          // 들여쓰기나 마커('*', '-') 등을 고려하여 더 정교하게 파싱할 수도 있음
+          // 예: if (trimmedLine.startsWith('*') || trimmedLine.startsWith('-')) ...
+          currentRecommendation.description += trimmedLine + '\n'; // 줄바꿈 유지하며 추가
+        } else if (currentRecommendation && trimmedLine.length === 0 && currentRecommendation.description.trim().length > 0) {
+           // 빈 줄을 만나면 단락 구분으로 추가 (선택적)
+           currentRecommendation.description += '\n';
+        }
+      }
+
+      // 마지막 추천 항목 추가
+      if (currentRecommendation) {
+        currentRecommendation.description = currentRecommendation.description.trim();
+        recommendations.push(currentRecommendation);
+      }
+
+      // 만약 파싱된 결과가 비어있으면 원본 텍스트 사용 (안전 장치)
+      const finalRecommendations = recommendations.length > 0
+          ? recommendations.map(r => r.description) // 객체 배열 대신 설명 문자열 배열로 반환 (기존과 호환)
+          // 만약 객체 배열로 반환하고 싶다면: ? recommendations
+          : [recommendationsText];
+
+      console.log('파싱된 계획 추천:', finalRecommendations);
+
+      res.status(200).json({ recommendations: finalRecommendations });
+  
+    } catch (error) {
+      console.error('AI 계획 추천 API 오류:', error);
+      res.status(500).json({ message: error.message || 'AI 계획 추천 처리 중 서버 내부 오류 발생' });
     }
   });
 

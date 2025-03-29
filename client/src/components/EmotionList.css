@@ -26,3 +26,22 @@
       min-width: 200px;
       white-space: pre-wrap; /* 줄바꿈 표시 */
   }
+
+  .emotion-list button { /* 간단한 버튼 스타일 */
+    padding: 4px 8px;
+    font-size: 0.9em;
+    cursor: pointer;
+    background-color: #eee;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+  }
+  
+  .emotion-list button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  
+  .emotion-list td:nth-child(4) { /* 액션 열 스타일 */
+      text-align: center;
+      vertical-align: middle;
+  }

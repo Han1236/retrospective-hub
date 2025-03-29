@@ -40,3 +40,69 @@
 .read-the-docs {
   color: #888;
 }
+
+.input-section, .list-section, .recommendation-section {
+  margin-bottom: 40px; /* 섹션 간 간격 */
+  padding: 20px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  background-color: #fff;
+}
+
+.recommendation-section h2 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.recommend-button {
+  padding: 10px 20px;
+  font-size: 1.1em;
+  background-color: #6f42c1; /* 보라색 계열 */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-bottom: 15px;
+}
+
+.recommend-button:hover:not(:disabled) {
+  background-color: #5a32a3;
+}
+
+.recommend-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.recommendations-list {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 5px;
+}
+
+.recommendations-list h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #6f42c1;
+}
+
+.recommendations-list ul {
+  list-style-type: disc; /* 기본 불릿 사용 */
+  padding-left: 20px;
+  margin: 0;
+}
+
+.recommendations-list li {
+  margin-bottom: 10px;
+  line-height: 1.6;
+}
+
+.error-message.recommend-error {
+  color: #dc3545; /* 빨간색 */
+  margin-top: 10px;
+}
